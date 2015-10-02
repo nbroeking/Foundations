@@ -1,0 +1,1 @@
+java -cp build/libs/broken2.jar Main
