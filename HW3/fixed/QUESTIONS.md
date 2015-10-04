@@ -1,4 +1,13 @@
-1.)Using the material that we have covered in Lectures 8, 9, and 10, explain
+Homework3
+=========
+
+Authors: Nicolas Broeking, Joshua Rahm
+Class: CSCI 5828 - Fall 2015
+Turned in by: Both
+
+
+
+1.) Using the material that we have covered in Lectures 8, 9, and 10, explain
 why the broken program doesn't work. What concurrency-related problems are
 occuring in this program? If you see the program end in livelock, then describe
 what is happening with the threads. Why can't they make progress? If you see
@@ -10,6 +19,52 @@ this, then also include a discussion on why that happens as well. In your
 answer, if you want to include snippets of code and/or output to explain what
 you are seeing, then do so. Use all of Markdown's capabilities to display what
 you need to explain the concurrency-related problems that you are observing.
+
+The broken program doesn't work because the Consumers, Producers, and the
+Production Line do not interact with each other in a thread safe manner.  There
+is no mutex protection on shared memory thus leading to race conditions. Several problems are
+
+####1. Multiple Producers are producing the same product id.  The Product object
+is not thread safe and thus when the product id's are being created there is a
+chance that two threads will use the same one.
+
+```Java
+public Product() {
+    id   = _id; //Set
+    name = "Product<" + id + ">";
+    _id++; //Updated
+    done = false;
+}
+
+public void productionDone() {
+    done = true;
+    _id--;
+}
+```
+
+These two methods show the mistake with the product ids. When the products are
+being created multiple threads can hit the set at the same time. This will give
+them each the same product id because there is no mutex stoping the other
+threads. The same issue happens with the productionDone method. If one thread
+is creatng a new product while another one is attempting to call this method it
+will cause \_id to have duplicate values.
+
+
+####2. Some product ids are not being produced This problem is releated to the
+above problem. When two threads both get assigned a product with the same id
+then the next step is to increment the value. They will both increment the
+value at the same time thus making \_id go up two values instead of one.
+Essentially for every duplicate product id there will be a missing product id.
+
+####3. Producer and consumer tight loop on their run method This is a waist of
+resources and even though it doesn't lead to any noticible problems it will
+cause the computer to waste cpu cycles checking on the status of the queue.
+The solution is to use conditional variables to block the thread untill that
+condition has been satisified..
+
+####4. Livelock, exceptions, and other such queue related issues Finally,
+because we have 10 consumers and 10 producers all trying to syncronize on the
+queue we will run into many issues.
 
 2.) Now switch your attention to the broken2 program. The only difference
 between the two programs are the synchronized keywords on the methods contained
