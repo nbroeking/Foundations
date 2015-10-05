@@ -15,8 +15,8 @@ public class ProductionLine {
     public ProductionLine() {
         products = new LinkedList<Product>();
         lock = new ReentrantLock();
-        producerCondition = new lock.newCondition();
-        consumerCondition = new lock.newCondition();
+        producerCondition = lock.newCondition();
+        consumerCondition = lock.newCondition();
     }
 
     public int size() {
