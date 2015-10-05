@@ -15,8 +15,7 @@ public class Consumer implements Runnable {
 
   public void run() {
     while (true) {
-      if (queue.size() > 0) {
-        Product p = queue.retrieve();
+        Product p = queue.retrieve(); //Thread safe and blocking
         if (p.isDone()) {
           String msg = "Consumer %d received done notification. Goodbye.";
           System.out.println(String.format(msg, id));
@@ -26,7 +25,6 @@ public class Consumer implements Runnable {
           String msg = "Consumer %d Consumed: %s";
           System.out.println(String.format(msg, id, p));
         }
-      }
     }
   }
 }

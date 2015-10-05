@@ -1,24 +1,64 @@
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ProductionLine {
 
-   private List<Product> products;
+    private List<Product> products;
+    private Lock lock;
+    private Condition producerCondition;
+    private Condition consumerCondition;
 
-   public ProductionLine() {
-     products = new LinkedList<Product>();
+
+    public ProductionLine() {
+        products = new LinkedList<Product>();
+        lock = new ReentrantLock();
+        producerCondition = new lock.newCondition();
+        consumerCondition = new lock.newCondition();
+    }
+
+    public int size() {
+        lock.lock();
+        try{
+            return products.size();
+        }
+        finally {
+            lock.unlock();
+        }
    }
 
-   public synchronized int size() {
-     return products.size();
-   }
+    public void append(Product p) {
 
-   public synchronized void append(Product p) {
-     products.add(p);
-   }
+        lock.lock();
+        try {
+            while (products.size() >= 10) {
+                producerCondition.await();
+            }
 
-   public synchronized Product retrieve() {
-     return products.remove(0);
-   }
+            products.add(p);
+        }
+        catch (InterruptedException e){
+            System.err.println("Could not add producer");
+        }
+        finally {
+            lock.unlock();
+        }
+    }
 
+    public Product retrieve() {
+        lock.lock();
+        try{
+            while( products.size() <= 0){consumerCondition.await();}
+            return products.remove(0);
+        }
+        catch (InterruptedException e){
+            System.err.println("Could not retrieve consumer");
+        }
+        finally {
+            lock.unlock();
+        }
+        return null;
+   }
 }
