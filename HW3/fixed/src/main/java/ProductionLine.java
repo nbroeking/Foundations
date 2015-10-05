@@ -38,6 +38,7 @@ public class ProductionLine {
             }
 
             products.add(p);
+            consumerCondition.signalAll();
         }
         catch (InterruptedException e){
             System.err.println("Could not add producer");
@@ -51,7 +52,9 @@ public class ProductionLine {
         lock.lock();
         try{
             while( products.size() <= 0){consumerCondition.await();}
-            return products.remove(0);
+            Product p = products.remove(0);
+            producerCondition.signalAll();
+            return p;
         }
         catch (InterruptedException e){
             System.err.println("Could not retrieve consumer");

@@ -1,6 +1,7 @@
 .gradle
 build/
-
+*.swp
+tags
 out/
 *.iml
 # Ignore Gradle GUI config

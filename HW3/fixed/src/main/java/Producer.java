@@ -23,7 +23,7 @@ public class Producer implements Runnable {
         queue.append(p);
         count++;
       }
-  
+
     lock.lock();
     Product p = new Product();
     p.productionDone();
