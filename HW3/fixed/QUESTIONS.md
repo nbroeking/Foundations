@@ -109,23 +109,23 @@ if (queue.size() > 0) {
 Question 2
 ----------
 
-This sycnronized calls only syncronize the production queue. This is a good start but it isn't enough to create a thread safe program. There are still two things that are wrong with the code. 
+This synchronized calls only synchronize the production queue. This is a good start but it isn't enough to create a thread safe program. There are still two things that are wrong with the code. 
 
-####Products static id is not syncronized
-This would solve several of the problems that showed up with threads accessing the queue out of order however it would not solve the problems releated to duplicated ids and missing ids. This is because the methods where the Product are created
+####Products static id is not synchronized
+This would solve several of the problems that showed up with threads accessing the queue out of order however it would not solve the problems related to duplicated ids and missing ids. This is because the methods where the Product are created
 
 ```Java
 if (queue.size() < 10) {
-        Product p = new Product(); //This still isn't syncronized
+        Product p = new Product(); //This still isn't synchronized
         String msg = "Producer %d Produced: %s on iteration %d";
         System.out.println(String.format(msg, id, p, count));
         queue.append(p);
         count++;
       }
 ```
-are not syncronized. They are still able to generate the same number and skip over nessisary ones.
+are not synchronized. They are still able to generate the same number and skip over necessary ones.
 
-####The producers are using the syncronized calls in an unsafe way
+####The producers are using the synchronized calls in an unsafe way
 The issue lies with the following code.
 
 ```Java
@@ -150,20 +150,4 @@ queue.size() and queue.retrieve are both thread safe calls now however they need
 Question 3
 ----------
 
-3.3. Now turn your attention to creating an implementation of the program that
-functions correctly in the fixed directory. In your answer to this question,
-you should discuss the approach you took to fix the problem and get your
-version of the program to generate output that is similar to the
-example_output.txt file that is included with the repo. While your output will
-not match the example_output.txt file exactly, it should have a similar
-structure:
-
-The beginning of the output will show the producers starting up, followed by
-the consumers, and then their outputs interleaving.  At some point, Producers
-will finish their work and announce that they are shutting down.  Consumers
-will then start to shut down as well as they encounter the special Products
-that indicate that production is done.  All of the producers will eventually
-shutdown followed by the last couple of consumers shutting down as well.  The
-last part of the file is then a list of product ids from 0 to 199 inclusive.
-The monitor may generate output at any time, so it might have a message that
-appears in the final list of ids. That is fine, if that happens to you.)
+Our approach to fix the problem involved turning the ProductionLine class into a blocking queue. Instead of having the producers and consumers busy wait on the insertions and removal we added conditional variables to allow them to wake up only when they are needed. The next thing was to add a reentrant lock around only the critical sections of the queue. This way the producers and consumers can still make progress while the other ones are running. The final thing we had to do was to give all producers a lock that they had to block on anytime they created a producer. This prevented the bugs where certain ids would keep getting skipped and duplicated. 
