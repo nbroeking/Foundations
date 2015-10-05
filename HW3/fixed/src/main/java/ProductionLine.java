@@ -9,15 +9,15 @@ public class ProductionLine {
      products = new LinkedList<Product>();
    }
 
-   public int size() {
+   public synchronized int size() {
      return products.size();
    }
 
-   public void append(Product p) {
+   public synchronized void append(Product p) {
      products.add(p);
    }
 
-   public Product retrieve() {
+   public synchronized Product retrieve() {
      return products.remove(0);
    }
 
