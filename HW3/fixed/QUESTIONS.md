@@ -12,7 +12,7 @@ Turned in by: Both
 
 The broken program doesn't work because the Consumers, Producers, and the
 Production Line do not interact with each other in a thread safe manner.  There
-is no mutex protection on shared memory thus leading to race conditions. Several problems are
+is no mutex protection on shared memory thus leading to several thread related issues.
 
 ####A. Multiple Producers are producing the same product id.  The Product object
 is not thread safe and thus when the product id's are being created there is a
@@ -40,19 +40,18 @@ is creating a new product while another one is attempting to call this method it
 will cause \_id to have duplicate values.
 
 
-####B. Some product ids are not being produced This problem is related to the
-above problem. When two threads both get assigned a product with the same id
+####B. Some product ids are not being produced 
+This problem is related to the above problem. When two threads both get assigned a product with the same id
 then the next step is to increment the value. They will both increment the
 value at the same time thus making \_id go up two values instead of one.
 Essentially for every duplicate product id there will be a missing product id.
 
-####C. Producer and consumer tight loop on their run method This is a waist of
-resources and even though it doesn't lead to any noticeable problems it will
-cause the computer to waste cpu cycles checking on the status of the queue.
+####C. Producer and consumer tight loop on their run method 
+This is a waist of resources and even though it doesn't lead to any noticeable problems it will cause the computer to waste cpu cycles checking on the status of the queue.
 The solution is to use conditional variables to block the thread until that
 condition has been satisfied.
 
-####D. Memory Barrier
+####D. Java Memory Barrier
 The java environment is designed for optimization, because of this the size of the queue is cached for each of the threads. Because of this the producers will never push the poison onto the queue because they think the queue is full.
 
 ```Java
@@ -98,7 +97,7 @@ The consumers will then never get a poison pill and then will never shut down. T
 ####E. Live-lock, exceptions, and other such queue related issues 
 Finally, because we have 10 consumers and 10 producers all trying to access shared memory a lot of different issues will arise. There are so many potential things that could happen that it is impossible to name them all, we will do our best though.
 
-* All operations on the queue will happen in a randomish order so we can get exceptions because the producer tries to access the next element when the queue is empty. Those statements are not atomic so another thread can swipe the last element in between the check and the retrieve. 
+* All operations on the queue will happen in a random order so we can get exceptions because the producer tries to access the next element when the queue is empty. Those statements are not atomic so another thread can swipe the last element in between the check and the retrieve. 
 
 ```Java
 if (queue.size() > 0) {
@@ -150,4 +149,6 @@ queue.size() and queue.retrieve are both thread safe calls now however they need
 Question 3
 ----------
 
-Our approach to fix the problem involved turning the ProductionLine class into a blocking queue. Instead of having the producers and consumers busy wait on the insertions and removal we added conditional variables to allow them to wake up only when they are needed. The next thing was to add a reentrant lock around only the critical sections of the queue. This way the producers and consumers can still make progress while the other ones are running. The final thing we had to do was to give all producers a lock that they had to block on anytime they created a producer. This prevented the bugs where certain ids would keep getting skipped and duplicated. 
+Our approach to fix the problem involved turning the ProductionLine class into a blocking queue. Instead of having the producers and consumers busy wait on the insertions and removal we added conditional variables to allow them to wake up only when they are needed. The next step was to add a reentrant lock around only the critical sections of the queue. This way the producers and consumers can still make progress while the other threads are running. The final thing we had to do was to give all producers a lock that they had to block on anytime they created a producer. This prevented the bugs where certain ids would keep getting skipped and duplicated. 
+
+By fixing the code in these three areas we are able to achieve a program where each thread is only blocked when it needs to be and only runs when it has too. The race conditions are all dealt with and the memory barrier issues go away when we start using a mutex.
